@@ -1,2 +1,2 @@
 # ShootAR
-A AR Shooter Game
+An AR Shooter Game
