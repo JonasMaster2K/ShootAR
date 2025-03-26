@@ -83,35 +83,35 @@ public class BallController : MonoBehaviour
 
     private void Update()
     {
-       // Debug.Log("Ball pos is " + transform.position);
-
-        if (grabbable.SelectingPointsCount > 0)
-        {
-            isGrabbing = true;
-            controllerOrHandsAttachPoint = GetActiveInteractorTransform();
-            physics.isKinematic = true;
-
-            float distance = Vector3.Distance(pullInitialPosition, controllerOrHandsAttachPoint.position);
-
-            if (distance <= maxPullDistance)
+        if(GameManager.gameState == GameManager.GameStates.PLAYING){
+            if (grabbable.SelectingPointsCount > 0)
             {
-                transform.position = controllerOrHandsAttachPoint.position;
+                isGrabbing = true;
+                controllerOrHandsAttachPoint = GetActiveInteractorTransform();
+                physics.isKinematic = true;
+
+                float distance = Vector3.Distance(pullInitialPosition, controllerOrHandsAttachPoint.position);
+
+                if (distance <= maxPullDistance)
+                {
+                    transform.position = controllerOrHandsAttachPoint.position;
+                }
+                else
+                {
+                    Vector3 direction = (controllerOrHandsAttachPoint.position - pullInitialPosition).normalized;
+                    transform.position = pullInitialPosition + direction * maxPullDistance;
+
+                    grabInteractable.enabled = false;
+                    grabInteractable.enabled = true;
+
+                }
+                
             }
-            else
+            else if (isGrabbing && !hasLaunched)
             {
-                Vector3 direction = (controllerOrHandsAttachPoint.position - pullInitialPosition).normalized;
-                transform.position = pullInitialPosition + direction * maxPullDistance;
-
-                 grabInteractable.enabled = false;
-                 grabInteractable.enabled = true;
-
+                onBallLaunched?.Invoke();
+                LaunchBall();
             }
-            
-        }
-        else if (isGrabbing && !hasLaunched)
-        {
-            onBallLaunched?.Invoke();
-            LaunchBall();
         }
     }
 

@@ -8,7 +8,6 @@ public class SpawnTargetsOverTime : MonoBehaviour
 
     private GameObject currentPrefab;
     public int targetsHit = 0;
-    [SerializeField] private GameObject gameManager;
     private bool isMoving = false;
     private bool movingLeft = true;
 
@@ -73,9 +72,9 @@ public class SpawnTargetsOverTime : MonoBehaviour
     public void IncreaseCounter()
     {
         targetsHit++;
-        if (gameManager != null)
+        if (GameManager.Instance != null)
         {
-            GameManager.score++;
+            GameManager.IncreaseScore();
         }
 
         if (targetsHit >= 2)

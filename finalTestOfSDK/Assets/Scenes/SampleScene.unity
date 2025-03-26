@@ -518,7 +518,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6242cc6764a2b944a81180302c38e44e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  displayedScore: 0
+  MaxScore: 10
+  displayedGameState: 0
+  setupPanel: {fileID: 0}
+  playingPanel: {fileID: 0}
+  gameOverPanel: {fileID: 0}
 --- !u!4 &30368610
 Transform:
   m_ObjectHideFlags: 0
@@ -20285,7 +20289,7 @@ GameObject:
   - component: {fileID: 1907620151}
   - component: {fileID: 1907620146}
   m_Layer: 0
-  m_Name: TestPlane
+  m_Name: ScoreUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
