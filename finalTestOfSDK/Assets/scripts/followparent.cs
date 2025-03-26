@@ -63,7 +63,7 @@ public class FollowParent : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = $"Score: {GameManager.getScore()}";
+            scoreText.text = $"Score: {GameManager.GetScore()}";
         }
     }
     

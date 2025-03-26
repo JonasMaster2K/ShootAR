@@ -4,33 +4,37 @@ using Oculus.Interaction;
 
 public class GameManager : MonoBehaviour
 {
-    public enum GameStates {
+    public enum GameStates 
+    {
         SETUP,
         PLAYING,
         GAME_OVER
-    };
-
+    }
     public static GameStates gameState;
 
-    [SerializeField] private static int score;
-    [SerializeField] private int MaxScore = 10;
-    [SerializeField] private GameStates displayedGameState;
+    [SerializeField] private float gameDuration = 60.0f;
+    [SerializeField] private float currentTime;
+    [SerializeField] private int maxScore = 10;
 
-    // References to UI elements or other game components
-    [SerializeField] private GameObject setupPanel;
-    [SerializeField] private GameObject playingPanel;
-    [SerializeField] private GameObject gameOverPanel;
+    private static int score;
 
-    // Singleton pattern to ensure only one GameManager exists
+    // Panel-Namen als Strings
+    [SerializeField] private string setupPanelName = "SetupPanel";
+    [SerializeField] private string playingPanelName = "PlayingPanel";
+    [SerializeField] private string gameOverPanelName = "GameOverPanel";
+
+    #region Singleton Pattern
     public static GameManager Instance { get; private set; }
+    #endregion
 
+    #region Initialization Methods
     void Awake()
     {
-        // Singleton setup
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;  // Hinzufügen des SceneLoaded-Event
         }
         else
         {
@@ -38,20 +42,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Initialize the game to the SETUP state
         SetGameState(GameStates.SETUP);
-        score = 0;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        displayedGameState = gameState;
-
-        // State-specific update logic
         switch (gameState)
         {
             case GameStates.SETUP:
@@ -65,114 +62,133 @@ public class GameManager : MonoBehaviour
                 break;
         }
     }
+    #endregion
 
-    // Method to change game state with proper setup
+    #region Game State Management
     public void SetGameState(GameStates newState)
     {
         gameState = newState;
 
-        // Update UI visibility based on current state
-        setupPanel.SetActive(newState == GameStates.SETUP);
-        playingPanel.SetActive(newState == GameStates.PLAYING);
-        gameOverPanel.SetActive(newState == GameStates.GAME_OVER);
+        // Panels anhand der Namen suchen und aktivieren/deaktivieren
+        SetPanelActive(setupPanelName, newState == GameStates.SETUP);
+        SetPanelActive(playingPanelName, newState == GameStates.PLAYING);
+        SetPanelActive(gameOverPanelName, newState == GameStates.GAME_OVER);
 
-        // Additional state transition logic
         switch (newState)
         {
             case GameStates.SETUP:
-                OnSetupEnter();
+                ResetGame();
                 break;
             case GameStates.PLAYING:
-                OnPlayingEnter();
+                StartGame();
                 break;
             case GameStates.GAME_OVER:
-                OnGameOverEnter();
+                EndGame();
                 break;
         }
     }
 
-    // State-specific handling methods
-    private void HandleSetupState()
+    private void ResetGame()
     {
-        // Logic for setup phase
-        // For example, waiting for player to start the game
-        if (OVRInput.GetDown(OVRInput.Button.Two))
-        {
-            SetGameState(GameStates.PLAYING);
-        }
+        score = 0;
+        currentTime = gameDuration;
+    }
+
+    private void StartGame()
+    {
+        // Any specific setup when starting the game
+    }
+
+    private void EndGame()
+    {
+        // Any specific cleanup when game ends
+    }
+    #endregion
+
+    #region State Handling Methods
+    private void HandleSetupState() 
+    { 
+        if (OVRInput.GetDown(OVRInput.Button.Two)) 
+            SetGameState(GameStates.PLAYING); 
     }
 
     private void HandlePlayingState()
     {
-        // Logic for playing phase
+        currentTime = Mathf.Max(0, currentTime - Time.deltaTime);
 
-        // Example game over condition
-        if (score >= MaxScore) // Replace with actual game over condition
+        if (score >= maxScore || currentTime <= 0)
         {
             SetGameState(GameStates.GAME_OVER);
         }
     }
 
-    private void HandleGameOverState()
-    {
-        // Logic for game over phase
-        // For example, waiting for restart input
-        if (OVRInput.GetDown(OVRInput.Button.Two))
-        {
-            RestartGame();
-        }
+    private void HandleGameOverState() 
+    { 
+        if (OVRInput.GetDown(OVRInput.Button.Two)) 
+            RestartGame(); 
     }
+    #endregion
 
-    // Specific enter methods for each state
-    private void OnSetupEnter()
-    {
-        // Reset game elements
-        ResetScore();
-        // Additional setup logic
-    }
-
-    private void OnPlayingEnter()
-    {
-        // Start game elements
-        // Initialize player, spawn enemies, etc.
-    }
-
-    private void OnGameOverEnter()
-    {
-        // Save high score
-        // Show final score
-        // Trigger game over animations/effects
-    }
-
-    // Restart the game
+    #region Game Management Helpers
     public void RestartGame()
     {
-        // Reset to setup state
-        ResetScore();
         SetGameState(GameStates.SETUP);
-        
-        // Optionally reload the scene
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+    #endregion
 
-
-    public static void IncreaseScore()
+    #region UI Panel Helpers
+    private GameObject FindPanelInUI(string panelName)
     {
-        score++;
+        // Sucht nach dem Canvas mit dem Namen "UI"
+        Canvas uiCanvas = GameObject.Find("UI")?.GetComponent<Canvas>();
+        if (uiCanvas == null)
+        {
+            Debug.LogWarning("Canvas mit dem Namen 'UI' nicht gefunden!");
+            return null;
+        }
+
+        // Sucht nach dem Panel im "UI"-Canvas
+        Transform panelTransform = uiCanvas.transform.Find(panelName);
+        if (panelTransform != null)
+        {
+            return panelTransform.gameObject;
+        }
+
+        Debug.LogWarning($"Panel '{panelName}' nicht im Canvas 'UI' gefunden!");
+        return null;
     }
 
-    private static void ResetScore()
+    private void SetPanelActive(string panelName, bool isActive)
     {
-        score = 0;
+        GameObject panel = FindPanelInUI(panelName);
+        if (panel != null)
+        {
+            panel.SetActive(isActive);
+        }
     }
+    #endregion
 
-    public static void setScore(int newScore)
+    #region Time Management
+    public string GetFormattedTime()
     {
-        score = newScore;
+        int minutes = Mathf.FloorToInt(currentTime / 60);
+        int seconds = Mathf.FloorToInt(currentTime % 60);
+        return string.Format("{0:00}:{1:00}", minutes, seconds);
     }
+    #endregion
 
-    public static int getScore()
+    #region Score Management
+    public static void IncreaseScore() => score++;
+    public static int GetScore() => score;
+    #endregion
+
+    #region Scene Management
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        return score;
+        SetPanelActive(setupPanelName, gameState == GameStates.SETUP);
+        SetPanelActive(playingPanelName, gameState == GameStates.PLAYING);
+        SetPanelActive(gameOverPanelName, gameState == GameStates.GAME_OVER);
     }
+    #endregion
 }
