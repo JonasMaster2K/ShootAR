@@ -43,6 +43,7 @@ public class BallController : MonoBehaviour
     private bool isGrabbing;
     public bool hasLaunched;
     private Rigidbody physics;
+    private BoxCollider collider;
     private Vector3 launchedBallForceDirection;
     private Grabbable grabbable;
     private const string BowlingPinTag = "BowlingPin";
@@ -52,6 +53,7 @@ public class BallController : MonoBehaviour
         trailRenderer = GetComponent<TrailRenderer>();
         trailRenderer.enabled = false;
         physics = GetComponent<Rigidbody>();
+        collider = GetComponent<BoxCollider>();
 
         //TODO add this to the instructions, moved grabbable to parent and make it
         //a requireComponent as this will be needed when adding custom hand poses
@@ -181,6 +183,7 @@ public class BallController : MonoBehaviour
         launchedBallForceDirection = Vector3.zero;
         
         hasLaunched = false;
+        collider.enabled = true;
         
         onBallRestored.Invoke();
     }
