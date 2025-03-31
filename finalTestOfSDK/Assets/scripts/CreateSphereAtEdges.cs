@@ -51,6 +51,7 @@ public class CreateSphereAtEdges : MonoBehaviour
 
     private void Update() {
         if(!initialized) return;
+        if(GameManager.gameState != GameManager.GameStates.SETUP) enableSpheres = false;
         if (!enableSpheres)
         {
             for (int i = 0; i < sphereReferences.Length; i++)

@@ -48,25 +48,27 @@ public class ResizeController : MonoBehaviour
 
     private void Update()
     {
-        initialPosition = transform.position;
-        if (GameManager.gameState == GameManager.GameStates.SETUP)
-        {
-            if (grabbable.SelectingPointsCount > 0)
+        if(GameManager.gameState == GameManager.GameStates.SETUP){
+            initialPosition = transform.position;
+            if (GameManager.gameState == GameManager.GameStates.SETUP)
             {
-                isGrabbing = true;
-                controllerOrHandsAttachPoint = GetActiveInteractorTransform();
-                physics.isKinematic = true;
-
-                if (controllerOrHandsAttachPoint != null)
+                if (grabbable.SelectingPointsCount > 0)
                 {
-                    transform.position = controllerOrHandsAttachPoint.position;
-                    ResizeCollider();
+                    isGrabbing = true;
+                    controllerOrHandsAttachPoint = GetActiveInteractorTransform();
+                    physics.isKinematic = true;
+
+                    if (controllerOrHandsAttachPoint != null)
+                    {
+                        transform.position = controllerOrHandsAttachPoint.position;
+                        ResizeCollider();
+                    }
                 }
-            }
-            else if (isGrabbing)
-            {
-                physics.isKinematic = true;
-                isGrabbing = false;
+                else if (isGrabbing)
+                {
+                    physics.isKinematic = true;
+                    isGrabbing = false;
+                }
             }
         }
     }

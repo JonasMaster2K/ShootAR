@@ -63,6 +63,10 @@ public class ParabolicRaycast : MonoBehaviour
             {
                 SpawnAnchor(hitPoint, hitNormal);
             }
+        } else {
+            targetIndicator.SetActive(false);
+            lineRenderer.positionCount = 0;
+            lineRenderer.SetPositions(new Vector3[0]);
         }
     }
 

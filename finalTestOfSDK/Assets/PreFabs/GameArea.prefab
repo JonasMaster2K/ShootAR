@@ -88,6 +88,8 @@ MonoBehaviour:
   lineWidth: 0.01
   updateInterval: 0
   enableLineRenderer: 1
+  limitYHeight: 1
+  maxYHeight: 0.01
 --- !u!1 &1799849703139730733
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,6 +188,8 @@ MonoBehaviour:
   lineWidth: 0.01
   updateInterval: 0
   enableLineRenderer: 1
+  limitYHeight: 1
+  maxYHeight: 0.01
 --- !u!114 &6129834252922490230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,7 +228,7 @@ MonoBehaviour:
   socketVisualPrefab: {fileID: 9003647409070149974, guid: f9ac6cd86395f7c42914309d8b1d71dd, type: 3}
   boxCollider: {fileID: 1419036759884035132}
   preserveYPosition: 0
-  showSockets: 1
+  showSockets: 0
 --- !u!1001 &1052105708494021098
 PrefabInstance:
   m_ObjectHideFlags: 0

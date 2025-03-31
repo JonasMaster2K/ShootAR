@@ -52,17 +52,21 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
                 lr.startColor = boxColor;
                 lr.endColor = boxColor;
                 lr.positionCount = 2;
-                lineObjects[i].SetActive(enableLineRenderer);
+                lineObjects[i].SetActive(false);
             }
         }
-        
-        UpdateBoundingBox();
     }
     
     void Update()
     {
         if (!Application.isPlaying) return;
-        
+
+        if (GameManager.gameState != GameManager.GameStates.SETUP)
+        {
+            SetBoundingBoxVisibility(false);
+            return;
+        }
+
         timeSinceLastUpdate += Time.deltaTime;
         if (updateInterval == 0 || timeSinceLastUpdate >= updateInterval)
         {
@@ -70,12 +74,24 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
             timeSinceLastUpdate = 0;
         }
     }
+
+    void SetBoundingBoxVisibility(bool visible)
+    {
+        foreach (GameObject line in lineObjects)
+        {
+            if (line != null)
+                line.SetActive(visible);
+        }
+    }
     
     void UpdateBoundingBox()
     {
-        if (targetObject == null)
+        if (targetObject == null || GameManager.gameState != GameManager.GameStates.SETUP)
+        {
+            SetBoundingBoxVisibility(false);
             return;
-            
+        }
+        
         if (targetCollider != null && targetCollider is BoxCollider boxCollider && limitYHeight)
         {
             // BoxCollider-spezifische Logik für eigene Bounds-Berechnung

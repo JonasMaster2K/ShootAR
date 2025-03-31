@@ -29,10 +29,10 @@ public class SocketManager : MonoBehaviour
     [SerializeField] private BoxCollider boxCollider;
     
     [Header("Position Options")]
-    [SerializeField] private bool preserveYPosition = true;
+    [SerializeField] private bool preserveYPosition = false;
 
     [Header("Visibility")]
-    [SerializeField] private bool showSockets = true;
+    [SerializeField] private bool showSockets = false;
 
     private Vector3 previousSize;
     private Vector3 previousCenter;
