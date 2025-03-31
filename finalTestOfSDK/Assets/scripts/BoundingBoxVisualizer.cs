@@ -19,6 +19,12 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
     [Tooltip("Bounding Box Linienrenderer aktivieren (nur In-Game)")]
     public bool enableLineRenderer = true;
     
+    [Tooltip("Y-Höhe des BoxColliders begrenzen")]
+    public bool limitYHeight = true;
+    
+    [Tooltip("Maximale Y-Höhe des BoxColliders")]
+    public float maxYHeight = 0.01f;
+    
     private GameObject[] lineObjects = new GameObject[12];
     private Bounds bounds;
     private float timeSinceLastUpdate = 0;
@@ -70,63 +76,123 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
         if (targetObject == null)
             return;
             
-        if (targetRenderer != null)
+        if (targetCollider != null && targetCollider is BoxCollider boxCollider && limitYHeight)
         {
-            bounds = targetRenderer.bounds;
-        }
-        else if (targetCollider != null)
-        {
-            bounds = targetCollider.bounds;
+            // BoxCollider-spezifische Logik für eigene Bounds-Berechnung
+            Vector3 size = boxCollider.size;
+            Vector3 center = boxCollider.center;
+            
+            // Y-Höhe begrenzen, falls gewünscht
+            if (limitYHeight)
+            {
+                size.y = Mathf.Min(size.y, maxYHeight);
+            }
+            
+            // Eigene Bounds mit den Eckpunkten erstellen
+            Vector3 extents = size * 0.5f;
+            Vector3[] corners = new Vector3[8];
+            corners[0] = center + new Vector3(-extents.x, -extents.y, -extents.z);
+            corners[1] = center + new Vector3(extents.x, -extents.y, -extents.z);
+            corners[2] = center + new Vector3(extents.x, -extents.y, extents.z);
+            corners[3] = center + new Vector3(-extents.x, -extents.y, extents.z);
+            corners[4] = center + new Vector3(-extents.x, extents.y, -extents.z);
+            corners[5] = center + new Vector3(extents.x, extents.y, -extents.z);
+            corners[6] = center + new Vector3(extents.x, extents.y, extents.z);
+            corners[7] = center + new Vector3(-extents.x, extents.y, extents.z);
+            
+            // Transformiere alle Eckpunkte in Weltkoordinaten
+            for (int i = 0; i < 8; i++)
+            {
+                corners[i] = targetObject.transform.TransformPoint(corners[i]);
+            }
+            
+            // Zeichne die Linien direkt
+            if (Application.isPlaying && enableLineRenderer)
+            {
+                DrawLine(0, corners[0], corners[1]);
+                DrawLine(1, corners[1], corners[2]);
+                DrawLine(2, corners[2], corners[3]);
+                DrawLine(3, corners[3], corners[0]);
+                
+                DrawLine(4, corners[4], corners[5]);
+                DrawLine(5, corners[5], corners[6]);
+                DrawLine(6, corners[6], corners[7]);
+                DrawLine(7, corners[7], corners[4]);
+                
+                DrawLine(8, corners[0], corners[4]);
+                DrawLine(9, corners[1], corners[5]);
+                DrawLine(10, corners[2], corners[6]);
+                DrawLine(11, corners[3], corners[7]);
+            }
         }
         else
         {
-            Debug.LogWarning("Kein Renderer oder Collider am Zielobjekt gefunden. Bounding Box kann nicht visualisiert werden.");
-            return;
-        }
-        
-        Vector3 min = bounds.min;
-        Vector3 max = bounds.max;
-        
-        Vector3[] corners = new Vector3[8];
-        corners[0] = new Vector3(min.x, min.y, min.z);
-        corners[1] = new Vector3(max.x, min.y, min.z);
-        corners[2] = new Vector3(max.x, min.y, max.z);
-        corners[3] = new Vector3(min.x, min.y, max.z);
-        corners[4] = new Vector3(min.x, max.y, min.z);
-        corners[5] = new Vector3(max.x, max.y, min.z);
-        corners[6] = new Vector3(max.x, max.y, max.z);
-        corners[7] = new Vector3(min.x, max.y, max.z);
-        
-        if (Application.isPlaying)
-        {
-            for (int i = 0; i < 12; i++)
+            // Standard-Verhalten für andere Collider oder Renderer
+            if (targetRenderer != null)
             {
-                lineObjects[i].SetActive(enableLineRenderer);
+                bounds = targetRenderer.bounds;
+            }
+            else if (targetCollider != null)
+            {
+                bounds = targetCollider.bounds;
+            }
+            else
+            {
+                Debug.LogWarning("Kein Renderer oder Collider am Zielobjekt gefunden. Bounding Box kann nicht visualisiert werden.");
+                return;
             }
             
-            DrawLine(0, corners[0], corners[1]);
-            DrawLine(1, corners[1], corners[2]);
-            DrawLine(2, corners[2], corners[3]);
-            DrawLine(3, corners[3], corners[0]);
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
             
-            DrawLine(4, corners[4], corners[5]);
-            DrawLine(5, corners[5], corners[6]);
-            DrawLine(6, corners[6], corners[7]);
-            DrawLine(7, corners[7], corners[4]);
+            Vector3[] corners = new Vector3[8];
+            corners[0] = new Vector3(min.x, min.y, min.z);
+            corners[1] = new Vector3(max.x, min.y, min.z);
+            corners[2] = new Vector3(max.x, min.y, max.z);
+            corners[3] = new Vector3(min.x, min.y, max.z);
+            corners[4] = new Vector3(min.x, max.y, min.z);
+            corners[5] = new Vector3(max.x, max.y, min.z);
+            corners[6] = new Vector3(max.x, max.y, max.z);
+            corners[7] = new Vector3(min.x, max.y, max.z);
             
-            DrawLine(8, corners[0], corners[4]);
-            DrawLine(9, corners[1], corners[5]);
-            DrawLine(10, corners[2], corners[6]);
-            DrawLine(11, corners[3], corners[7]);
+            if (Application.isPlaying && enableLineRenderer)
+            {
+                DrawLine(0, corners[0], corners[1]);
+                DrawLine(1, corners[1], corners[2]);
+                DrawLine(2, corners[2], corners[3]);
+                DrawLine(3, corners[3], corners[0]);
+                
+                DrawLine(4, corners[4], corners[5]);
+                DrawLine(5, corners[5], corners[6]);
+                DrawLine(6, corners[6], corners[7]);
+                DrawLine(7, corners[7], corners[4]);
+                
+                DrawLine(8, corners[0], corners[4]);
+                DrawLine(9, corners[1], corners[5]);
+                DrawLine(10, corners[2], corners[6]);
+                DrawLine(11, corners[3], corners[7]);
+            }
         }
     }
     
     void DrawLine(int index, Vector3 start, Vector3 end)
     {
         if (!enableLineRenderer || !Application.isPlaying) return;
-        LineRenderer lr = lineObjects[index].GetComponent<LineRenderer>();
-        lr.SetPosition(0, start);
-        lr.SetPosition(1, end);
+        
+        if (lineObjects[index] != null)
+        {
+            LineRenderer lr = lineObjects[index].GetComponent<LineRenderer>();
+            if (lr != null)
+            {
+                lr.SetPosition(0, start);
+                lr.SetPosition(1, end);
+                lr.startColor = boxColor;
+                lr.endColor = boxColor;
+                lr.startWidth = lineWidth;
+                lr.endWidth = lineWidth;
+                lineObjects[index].SetActive(true);
+            }
+        }
     }
     
     void OnDrawGizmos()
@@ -135,8 +201,23 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
         
         if (targetCollider != null && targetCollider is BoxCollider box && enableLineRenderer)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(box.center + gameObject.transform.position, box.size);
+            Gizmos.color = boxColor;
+            
+            if (limitYHeight)
+            {
+                // Angepasste Größe für Gizmo
+                Vector3 size = box.size;
+                size.y = Mathf.Min(size.y, maxYHeight);
+                Matrix4x4 oldMatrix = Gizmos.matrix;
+                Gizmos.matrix = targetObject.transform.localToWorldMatrix;
+                Gizmos.DrawWireCube(box.center, size);
+                Gizmos.matrix = oldMatrix;
+            }
+            else
+            {
+                // Standard-Verhalten
+                Gizmos.DrawWireCube(box.center + targetObject.transform.position, box.size);
+            }
         }
     }
     

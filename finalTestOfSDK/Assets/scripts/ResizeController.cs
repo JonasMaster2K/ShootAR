@@ -10,7 +10,6 @@ public class ResizeController : MonoBehaviour
     [SerializeField] private HandGrabInteractable leftHandGrabInteractable;
     [SerializeField] private HandGrabInteractable rightHandGrabInteractable;
 
-    [SerializeField] private Transform startPosition;
     public UnityEvent onBallRestored = new();
 
     private Transform controllerOrHandsAttachPoint;
@@ -36,7 +35,6 @@ public class ResizeController : MonoBehaviour
         grabbable = GetComponentInChildren<Grabbable>();
         grabbable.WhenPointerEventRaised += GrabbableOnWhenPointerEventRaised;
         
-        transform.position = startPosition.position;
         initialPosition = transform.position;
     }
 
@@ -50,6 +48,7 @@ public class ResizeController : MonoBehaviour
 
     private void Update()
     {
+        initialPosition = transform.position;
         if (GameManager.gameState == GameManager.GameStates.SETUP)
         {
             if (grabbable.SelectingPointsCount > 0)

@@ -59,6 +59,7 @@ public class SpawnTargetsOverTime : MonoBehaviour
             spawnArea.bounds.min.y, // Setzt es flach auf den Boden
             spawnArea.bounds.center.z // Position in der Z-Achse beibehalten
         );
+        spawnPosition += spawnArea.transform.position - spawnArea.bounds.center;
 
         // Prefab erstellen
         currentPrefab = Instantiate(prefab, spawnPosition, prefab.transform.rotation);

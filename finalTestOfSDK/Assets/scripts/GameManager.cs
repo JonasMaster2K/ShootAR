@@ -8,9 +8,11 @@ public class GameManager : MonoBehaviour
     {
         SETUP,
         PLAYING,
+        GAME_WON,
         GAME_OVER
     }
     public static GameStates gameState;
+    public static Transform gameAreaTransform;
 
     [SerializeField] private float gameDuration = 60.0f;
     [SerializeField] private float currentTime;
