@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
         GAME_OVER
     }
     public static GameStates gameState;
-    public static Transform gameAreaTransform;
+    public static bool anchorExists = false;
 
     [SerializeField] private float gameDuration = 60.0f;
     [SerializeField] private float currentTime;

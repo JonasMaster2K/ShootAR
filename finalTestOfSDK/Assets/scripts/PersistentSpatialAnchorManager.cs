@@ -32,11 +32,17 @@ public class ParabolicRaycast : MonoBehaviour
         targetIndicator = Instantiate(targetIndicatorPrefab);
         targetIndicator.transform.localScale = targetScale;
         targetIndicator.SetActive(false); // Unsichtbar zu Beginn
+
+        if (LoadAnchorPosition(out Vector3 savedPosition, out Quaternion savedRotation))
+        {
+            Instantiate(anchorPrefab, savedPosition, savedRotation);
+            GameManager.anchorExists = true; // Verhindert erneutes Platzieren
+        }
     }
 
     private void Update()
     {
-        if(GameManager.gameState == GameManager.GameStates.SETUP){
+        if(GameManager.gameState == GameManager.GameStates.SETUP && !GameManager.anchorExists){
             // Position und Richtung des Controllers holen
             Vector3 controllerPos = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
             Quaternion controllerRot = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
@@ -119,22 +125,54 @@ public class ParabolicRaycast : MonoBehaviour
 
     private void SpawnAnchor(Vector3 position, Vector3 normal)
     {
-        // Erzeuge das Objekt
+        if (GameManager.anchorExists) return; // Falls schon vorhanden, nichts tun
+
         GameObject obj = Instantiate(anchorPrefab, position, Quaternion.identity);
-        
-        // Hole die Controller-Rotation
+
         Quaternion controllerRot = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
-        
-        // Erhalte den Forward-Vektor des Controllers in Weltkoordinaten, aber mit Y=0
         Vector3 controllerForward = controllerRot * Vector3.forward;
         controllerForward.y = 0;
         controllerForward.Normalize();
-        
-        // Erstelle eine Rotation, die in die Richtung des Controllers zeigt
-        // aber flach auf der Oberfläche bleibt (Y-Achse = normale)
+
         Quaternion targetRotation = Quaternion.LookRotation(controllerForward, normal);
-        
-        // Setze die Rotation des Objekts
         obj.transform.rotation = targetRotation;
+
+        SaveAnchorPosition(position, targetRotation);
+        GameManager.anchorExists = true; // Sperrt weiteres Platzieren
+    }
+
+
+    private void SaveAnchorPosition(Vector3 position, Quaternion rotation)
+    {
+        PlayerPrefs.SetFloat("AnchorPosX", position.x);
+        PlayerPrefs.SetFloat("AnchorPosY", position.y);
+        PlayerPrefs.SetFloat("AnchorPosZ", position.z);
+        PlayerPrefs.SetFloat("AnchorRotX", rotation.x);
+        PlayerPrefs.SetFloat("AnchorRotY", rotation.y);
+        PlayerPrefs.SetFloat("AnchorRotZ", rotation.z);
+        PlayerPrefs.SetFloat("AnchorRotW", rotation.w);
+        PlayerPrefs.Save();
+    }
+
+    private bool LoadAnchorPosition(out Vector3 position, out Quaternion rotation)
+    {
+        if (PlayerPrefs.HasKey("AnchorPosX"))
+        {
+            position = new Vector3(
+                PlayerPrefs.GetFloat("AnchorPosX"),
+                PlayerPrefs.GetFloat("AnchorPosY"),
+                PlayerPrefs.GetFloat("AnchorPosZ")
+            );
+            rotation = new Quaternion(
+                PlayerPrefs.GetFloat("AnchorRotX"),
+                PlayerPrefs.GetFloat("AnchorRotY"),
+                PlayerPrefs.GetFloat("AnchorRotZ"),
+                PlayerPrefs.GetFloat("AnchorRotW")
+            );
+            return true;
+        }
+        position = Vector3.zero;
+        rotation = Quaternion.identity;
+        return false;
     }
 }
