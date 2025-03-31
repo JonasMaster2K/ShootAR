@@ -17,6 +17,8 @@ public class ParabolicRaycast : MonoBehaviour
     private LineRenderer lineRenderer;
     private GameObject targetIndicator;
 
+    private GameObject currentAnchor;
+
     private void Start()
     {
         // LineRenderer für die Parabel hinzufügen
@@ -35,44 +37,52 @@ public class ParabolicRaycast : MonoBehaviour
 
         if (LoadAnchorPosition(out Vector3 savedPosition, out Quaternion savedRotation))
         {
-            Instantiate(anchorPrefab, savedPosition, savedRotation);
+            currentAnchor = Instantiate(anchorPrefab, savedPosition, savedRotation);
             GameManager.anchorExists = true; // Verhindert erneutes Platzieren
         }
     }
 
     private void Update()
     {
-        if(GameManager.gameState == GameManager.GameStates.SETUP && !GameManager.anchorExists){
-            // Position und Richtung des Controllers holen
-            Vector3 controllerPos = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
-            Quaternion controllerRot = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
-            Vector3 startDirection = controllerRot * Vector3.forward;  // Richtung des Strahls
-
-            Vector3 hitPoint = Vector3.zero;
-            Vector3 hitNormal = Vector3.up;  // Standardwert
-            bool hitDetected = CalculateParabolicCurve(controllerPos, startDirection, out hitPoint, out hitNormal);
-
-            // Zeige das Zielobjekt an der Treffpunkt-Position an
-            if (hitDetected)
-            {
-                targetIndicator.SetActive(true);
-                targetIndicator.transform.position = hitPoint;
-                targetIndicator.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hitNormal);
-            }
-            else
-            {
+        if(GameManager.gameState == GameManager.GameStates.SETUP){
+            if(!GameManager.anchorExists){
+                HandlePlacement();
+            } else if (OVRInput.GetDown(OVRInput.Button.One)) {
+                ResetAnchor();
+            } else {
                 targetIndicator.SetActive(false);
+                lineRenderer.positionCount = 0;
+                lineRenderer.SetPositions(new Vector3[0]);
             }
+        }
+    }
 
-            // Platzieren des Objekts, wenn der Trigger gedrückt wird
-            if (hitDetected && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
-            {
-                SpawnAnchor(hitPoint, hitNormal);
-            }
-        } else {
+    private void HandlePlacement(){
+        // Position und Richtung des Controllers holen
+        Vector3 controllerPos = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
+        Quaternion controllerRot = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
+        Vector3 startDirection = controllerRot * Vector3.forward;  // Richtung des Strahls
+
+        Vector3 hitPoint = Vector3.zero;
+        Vector3 hitNormal = Vector3.up;  // Standardwert
+        bool hitDetected = CalculateParabolicCurve(controllerPos, startDirection, out hitPoint, out hitNormal);
+
+        // Zeige das Zielobjekt an der Treffpunkt-Position an
+        if (hitDetected)
+        {
+            targetIndicator.SetActive(true);
+            targetIndicator.transform.position = hitPoint;
+            targetIndicator.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hitNormal);
+        }
+        else
+        {
             targetIndicator.SetActive(false);
-            lineRenderer.positionCount = 0;
-            lineRenderer.SetPositions(new Vector3[0]);
+        }
+
+        // Platzieren des Objekts, wenn der Trigger gedrückt wird
+        if (hitDetected && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
+        {
+            SpawnAnchor(hitPoint, hitNormal);
         }
     }
 
@@ -127,20 +137,28 @@ public class ParabolicRaycast : MonoBehaviour
     {
         if (GameManager.anchorExists) return; // Falls schon vorhanden, nichts tun
 
-        GameObject obj = Instantiate(anchorPrefab, position, Quaternion.identity);
+        currentAnchor = Instantiate(anchorPrefab, position, Quaternion.identity);
 
         Quaternion controllerRot = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
         Vector3 controllerForward = controllerRot * Vector3.forward;
         controllerForward.y = 0;
         controllerForward.Normalize();
 
-        Quaternion targetRotation = Quaternion.LookRotation(controllerForward, normal);
-        obj.transform.rotation = targetRotation;
+        currentAnchor.transform.rotation = Quaternion.LookRotation(controllerForward, normal);
 
-        SaveAnchorPosition(position, targetRotation);
+        SaveAnchorPosition(position, currentAnchor.transform.rotation);
         GameManager.anchorExists = true; // Sperrt weiteres Platzieren
     }
 
+    private void ResetAnchor()
+    {
+        if (currentAnchor != null)
+        {
+            Destroy(currentAnchor);
+        }
+        DeletePlayerPrefs();
+        GameManager.anchorExists = false;
+    }
 
     private void SaveAnchorPosition(Vector3 position, Quaternion rotation)
     {
@@ -174,5 +192,24 @@ public class ParabolicRaycast : MonoBehaviour
         position = Vector3.zero;
         rotation = Quaternion.identity;
         return false;
+    }
+
+    private void DeletePlayerPrefs()
+    {
+        if (PlayerPrefs.HasKey("AnchorPosX"))
+        {
+            PlayerPrefs.DeleteKey("AnchorPosX");
+            PlayerPrefs.DeleteKey("AnchorPosY");
+            PlayerPrefs.DeleteKey("AnchorPosZ");
+            PlayerPrefs.DeleteKey("AnchorRotX");
+            PlayerPrefs.DeleteKey("AnchorRotY");
+            PlayerPrefs.DeleteKey("AnchorRotZ");
+            PlayerPrefs.DeleteKey("AnchorRotW");
+            PlayerPrefs.Save();
+        }
+    }
+
+    private void OnApplicationQuit() {
+        DeletePlayerPrefs();
     }
 }

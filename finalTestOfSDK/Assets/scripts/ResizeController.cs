@@ -10,6 +10,7 @@ public class ResizeController : MonoBehaviour
     [SerializeField] private HandGrabInteractable leftHandGrabInteractable;
     [SerializeField] private HandGrabInteractable rightHandGrabInteractable;
 
+    [SerializeField] private Transform startPosition;
     public UnityEvent onBallRestored = new();
 
     private Transform controllerOrHandsAttachPoint;
@@ -35,6 +36,7 @@ public class ResizeController : MonoBehaviour
         grabbable = GetComponentInChildren<Grabbable>();
         grabbable.WhenPointerEventRaised += GrabbableOnWhenPointerEventRaised;
         
+        transform.position = startPosition.position;
         initialPosition = transform.position;
     }
 
@@ -48,27 +50,24 @@ public class ResizeController : MonoBehaviour
 
     private void Update()
     {
-        if(GameManager.gameState == GameManager.GameStates.SETUP){
-            initialPosition = transform.position;
-            if (GameManager.gameState == GameManager.GameStates.SETUP)
+        if (GameManager.gameState == GameManager.GameStates.SETUP)
+        {
+            if (grabbable.SelectingPointsCount > 0)
             {
-                if (grabbable.SelectingPointsCount > 0)
-                {
-                    isGrabbing = true;
-                    controllerOrHandsAttachPoint = GetActiveInteractorTransform();
-                    physics.isKinematic = true;
+                isGrabbing = true;
+                controllerOrHandsAttachPoint = GetActiveInteractorTransform();
+                physics.isKinematic = true;
 
-                    if (controllerOrHandsAttachPoint != null)
-                    {
-                        transform.position = controllerOrHandsAttachPoint.position;
-                        ResizeCollider();
-                    }
-                }
-                else if (isGrabbing)
+                if (controllerOrHandsAttachPoint != null)
                 {
-                    physics.isKinematic = true;
-                    isGrabbing = false;
+                    transform.position = controllerOrHandsAttachPoint.position;
+                    ResizeCollider();
                 }
+            }
+            else if (isGrabbing)
+            {
+                physics.isKinematic = true;
+                isGrabbing = false;
             }
         }
     }

@@ -204,7 +204,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LeftPoint: {fileID: 8433235045602538744}
   RightPoint: {fileID: 3692951692007356692}
-  PositionAtBall: {fileID: 0}
+  PositionAtBall1: {fileID: 0}
+  PositionAtBall2: {fileID: 0}
+  PositionAtBall3: {fileID: 0}
   BallController: {fileID: 0}
   BallWasReleased: 0
   NewDragStarted: 0

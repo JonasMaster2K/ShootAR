@@ -100,7 +100,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5960867300672219374}
   - component: {fileID: 1419036759884035132}
-  - component: {fileID: 3761578900595611172}
   - component: {fileID: 919289457088681811}
   - component: {fileID: 6129834252922490230}
   m_Layer: 0
@@ -149,28 +148,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.8, y: 0, z: 2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3761578900595611172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799849703139730733}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7222796c4f82f914d96ae01c2f32d9d3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  spherePrefab: {fileID: 4959757734096664050, guid: 253657736f8ad1847a8fe25061aaad2b, type: 3}
-  sphereRadius: 0.05
-  sphereMaterial: {fileID: -3033667219593020291, guid: 284047d05118b6a458759c98a5e6ffdd, type: 3}
-  sphereColor: {r: 1, g: 0, b: 0, a: 1}
-  sphereReferences:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableSpheres: 1
 --- !u!114 &919289457088681811
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,6 +218,10 @@ PrefabInstance:
       propertyPath: startPosition
       value: 
       objectReference: {fileID: 5425404627283500092}
+    - target: {fileID: 421015169917816277, guid: e02178dd3864b4d47b01dcda198d5521, type: 3}
+      propertyPath: instanceId
+      value: 65a15b98-5384-4959-8202-526802fb50f7
+      objectReference: {fileID: 0}
     - target: {fileID: 504918209763431966, guid: e02178dd3864b4d47b01dcda198d5521, type: 3}
       propertyPath: m_IsTrigger
       value: 0
@@ -312,6 +293,10 @@ PrefabInstance:
     - target: {fileID: 6034902309630067593, guid: e02178dd3864b4d47b01dcda198d5521, type: 3}
       propertyPath: m_Name
       value: AnchorForStringOne
+      objectReference: {fileID: 0}
+    - target: {fileID: 7843923288129929399, guid: e02178dd3864b4d47b01dcda198d5521, type: 3}
+      propertyPath: instanceId
+      value: 9afab6cc-b99c-4d60-805d-c0334f24e158
       objectReference: {fileID: 0}
     - target: {fileID: 9183764727118059947, guid: e02178dd3864b4d47b01dcda198d5521, type: 3}
       propertyPath: m_LocalPosition.z
