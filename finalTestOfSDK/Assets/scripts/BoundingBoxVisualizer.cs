@@ -1,36 +1,52 @@
 using UnityEngine;
 
+// Setzt das Script so, dass es auch im Editor-Modus ausgeführt wird
 [ExecuteInEditMode]
 public class BoundingBoxVisualizer : MonoBehaviour
 {
+    // Das zu visualisierende Zielobjekt (wird im Editor gesetzt)
     [Tooltip("Das zu visualisierende Zielobjekt. Falls leer, wird das eigene GameObject verwendet.")]
     public GameObject targetObject;
     
+    // Farbe der Bounding Box
     [Tooltip("Farbe der Bounding Box")]
     public Color boxColor = Color.green;
     
+    // Linienbreite der Bounding Box
     [Tooltip("Linienbreite der Bounding Box")]
-    [Range(0.001f, 0.1f)]
+    [Range(0.001f, 0.1f)]  // Der Bereich der Linienbreite von 0.001 bis 0.1
     public float lineWidth = 0.01f;
     
+    // Aktualisierungsrate (0 bedeutet jede Frame)
     [Tooltip("Aktualisierungsrate (0 für jedes Frame)")]
     public float updateInterval = 0;
     
+    // Aktiviert oder deaktiviert das Zeichnen der Bounding Box Linien im Spiel
     [Tooltip("Bounding Box Linienrenderer aktivieren (nur In-Game)")]
     public bool enableLineRenderer = true;
     
+    // Beschränkung der Y-Höhe der Bounding Box
     [Tooltip("Y-Höhe des BoxColliders begrenzen")]
     public bool limitYHeight = true;
     
+    // Maximale Y-Höhe des BoxColliders
     [Tooltip("Maximale Y-Höhe des BoxColliders")]
     public float maxYHeight = 0.01f;
     
+    // Array für die Linienobjekte, die die Bounding Box darstellen
     private GameObject[] lineObjects = new GameObject[12];
+    
+    // Die Bounds der Bounding Box
     private Bounds bounds;
+    
+    // Zeit seit dem letzten Update
     private float timeSinceLastUpdate = 0;
+    
+    // Renderer und Collider des Zielobjekts
     private Renderer targetRenderer;
     private Collider targetCollider;
 
+    // Start wird einmal beim Start des Spiels oder beim Initialisieren des Skripts aufgerufen
     void Start()
     {
         if (targetObject == null)
@@ -43,20 +59,21 @@ public class BoundingBoxVisualizer : MonoBehaviour
         {
             for (int i = 0; i < 12; i++)
             {
-                lineObjects[i] = new GameObject("BoundingBoxLine_" + i);
-                lineObjects[i].transform.parent = transform;
-                LineRenderer lr = lineObjects[i].AddComponent<LineRenderer>();
-                lr.startWidth = lineWidth;
-                lr.endWidth = lineWidth;
+                lineObjects[i] = new GameObject("BoundingBoxLine_" + i); 
+                lineObjects[i].transform.parent = transform; 
+                LineRenderer lr = lineObjects[i].AddComponent<LineRenderer>(); 
+                lr.startWidth = lineWidth; 
+                lr.endWidth = lineWidth;   
                 lr.material = new Material(Shader.Find("Sprites/Default"));
-                lr.startColor = boxColor;
-                lr.endColor = boxColor;
-                lr.positionCount = 2;
+                lr.startColor = boxColor; 
+                lr.endColor = boxColor;   
+                lr.positionCount = 2;     
                 lineObjects[i].SetActive(false);
             }
         }
     }
     
+    // Update wird jeden Frame aufgerufen
     void Update()
     {
         if (!Application.isPlaying) return;
@@ -68,6 +85,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
         }
 
         timeSinceLastUpdate += Time.deltaTime;
+
         if (updateInterval == 0 || timeSinceLastUpdate >= updateInterval)
         {
             UpdateBoundingBox();
@@ -75,6 +93,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
         }
     }
 
+    // Setzt die Sichtbarkeit der Bounding Box Linien
     void SetBoundingBoxVisibility(bool visible)
     {
         foreach (GameObject line in lineObjects)
@@ -84,6 +103,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
         }
     }
     
+    // Aktualisiert die Bounding Box basierend auf den Collider- oder Renderer-Informationen
     void UpdateBoundingBox()
     {
         if (targetObject == null || GameManager.gameState != GameManager.GameStates.SETUP)
@@ -102,6 +122,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
                 size.y = Mathf.Min(size.y, maxYHeight);
             }
             
+            // Berechnen der Ecken des BoxColliders
             Vector3 extents = size * 0.5f;
             Vector3[] corners = new Vector3[8];
             corners[0] = center + new Vector3(-extents.x, -extents.y, -extents.z);
@@ -113,6 +134,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
             corners[6] = center + new Vector3(extents.x, extents.y, extents.z);
             corners[7] = center + new Vector3(-extents.x, extents.y, extents.z);
             
+            // Transformiere die lokalen Koordinaten in Weltkoordinaten
             for (int i = 0; i < 8; i++)
             {
                 corners[i] = targetObject.transform.TransformPoint(corners[i]);
@@ -152,6 +174,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
                 return;
             }
             
+            // Berechnen der Ecken der Bounding Box basierend auf den Bounds
             Vector3 min = bounds.min;
             Vector3 max = bounds.max;
             
@@ -165,6 +188,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
             corners[6] = new Vector3(max.x, max.y, max.z);
             corners[7] = new Vector3(min.x, max.y, max.z);
             
+            // Zeichnen der Bounding Box Linien, wenn der LineRenderer aktiviert ist
             if (Application.isPlaying && enableLineRenderer)
             {
                 DrawLine(0, corners[0], corners[1]);
@@ -185,6 +209,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
         }
     }
     
+    // Hilfsmethode, um eine Linie zwischen zwei Punkten zu zeichnen
     void DrawLine(int index, Vector3 start, Vector3 end)
     {
         if (!enableLineRenderer || !Application.isPlaying) return;
@@ -205,6 +230,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
         }
     }
     
+    // Gizmos werden verwendet, um die Bounding Box im Editor zu zeichnen
     void OnDrawGizmos()
     {
         if (Application.isPlaying) return;
@@ -229,6 +255,7 @@ public class BoundingBoxVisualizer : MonoBehaviour
         }
     }
     
+    // Wird aufgerufen, wenn das Objekt zerstört wird, um Ressourcen zu bereinigen
     void OnDestroy()
     {
         if (!Application.isPlaying) return;

@@ -1,0 +1,5 @@
+D:/dev/c#/ShootAR/finalTestOfSDK/.utmp/RelWithDebInfo/70581u6g/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/dev/c#/ShootAR/finalTestOfSDK/.utmp/RelWithDebInfo/70581u6g/arm64-v8a/CMakeFiles/rebuild_cache.dir
+D:/dev/c#/ShootAR/finalTestOfSDK/.utmp/RelWithDebInfo/70581u6g/arm64-v8a/GameActivity/CMakeFiles/game.dir
+D:/dev/c#/ShootAR/finalTestOfSDK/.utmp/RelWithDebInfo/70581u6g/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+D:/dev/c#/ShootAR/finalTestOfSDK/.utmp/RelWithDebInfo/70581u6g/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir

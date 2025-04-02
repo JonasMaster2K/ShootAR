@@ -17,6 +17,7 @@ public class GameAreaPlacement : MonoBehaviour
     private GameObject targetIndicator;
     private GameObject currentAnchor;
 
+    // Initialisiert den LineRenderer und lädt gespeicherte Ankerpositionen
     private void Start()
     {
         lineRenderer = gameObject.AddComponent<LineRenderer>();
@@ -41,6 +42,7 @@ public class GameAreaPlacement : MonoBehaviour
         }
     }
 
+    // Überprüft den Spielstatus und aktiviert/deaktiviert den Platzierungsmechanismus
     private void Update()
     {
         if (GameManager.gameState == GameManager.GameStates.SETUP)
@@ -48,12 +50,15 @@ public class GameAreaPlacement : MonoBehaviour
             lineRenderer.enabled = true;
             targetIndicator.SetActive(true);
             HandlePlacement();
-        } else if(GameManager.gameState != GameManager.GameStates.SETUP) {
+        } 
+        else if(GameManager.gameState != GameManager.GameStates.SETUP) 
+        {
             lineRenderer.enabled = false;
             targetIndicator.SetActive(false);
         }
     }
 
+    // Handhabt die Platzierung des Ankers basierend auf Controller-Input
     private void HandlePlacement()
     {
         Vector3 controllerPos = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
@@ -81,6 +86,7 @@ public class GameAreaPlacement : MonoBehaviour
         }
     }
 
+    // Berechnet eine parabolische Wurfkurve und prüft auf Kollisionen mit der Umgebung
     private bool CalculateParabolicCurve(Vector3 startPos, Vector3 startDir, out Vector3 hitPoint, out Vector3 hitNormal)
     {
         List<Vector3> points = new List<Vector3>();
@@ -117,6 +123,7 @@ public class GameAreaPlacement : MonoBehaviour
         return hitDetected;
     }
 
+    // Berechnet einen Punkt auf der Parabel basierend auf einem Parameter t
     private Vector3 ParabolicPoint(Vector3 start, Vector3 direction, float t)
     {
         Vector3 horizontal = direction * maxDistance * t;
@@ -124,6 +131,7 @@ public class GameAreaPlacement : MonoBehaviour
         return start + horizontal + vertical;
     }
 
+    // Erstellt oder ersetzt einen Anker an der gegebenen Position
     private void SpawnAnchor(Vector3 position, Vector3 normal, bool isUserPlaced = true)
     {
         if (currentAnchor != null)
@@ -147,6 +155,7 @@ public class GameAreaPlacement : MonoBehaviour
         }
     }
 
+    // Speichert die Position und Rotation des Ankers in den PlayerPrefs
     private void SaveAnchorPosition(Vector3 position, Quaternion rotation)
     {
         PlayerPrefs.SetFloat("AnchorPosX", position.x);
@@ -159,6 +168,7 @@ public class GameAreaPlacement : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    // Lädt eine gespeicherte Ankerposition aus den PlayerPrefs
     private bool LoadAnchorPosition(out Vector3 position, out Quaternion rotation)
     {
         if (PlayerPrefs.HasKey("AnchorPosX"))
@@ -176,7 +186,6 @@ public class GameAreaPlacement : MonoBehaviour
             );
             return true;
         }
-
         position = Vector3.zero;
         rotation = Quaternion.identity;
         return false;

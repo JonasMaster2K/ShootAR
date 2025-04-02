@@ -3,6 +3,7 @@ using TMPro;
 
 public class GameTimer : MonoBehaviour
 {
+    // Referenz auf das TextMeshPro-Textobjekt, das die Zeit anzeigt
     [SerializeField] private TextMeshPro timerText;
 
     void Update()

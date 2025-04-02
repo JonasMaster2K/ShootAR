@@ -2,26 +2,30 @@ using UnityEngine;
 
 public class SlingShotString : MonoBehaviour
 {
-    [SerializeField] private Transform LeftPoint;
-    [SerializeField] private Transform RightPoint;
-    [SerializeField] private Transform PositionAtBall1;
-    [SerializeField] private Transform PositionAtBall2;
-    [SerializeField] private Transform PositionAtBall3;
+    // Verweise auf die Transform-Objekte, die die Punkte der Schleuder und des Balls repräsentieren
+    [SerializeField] private Transform LeftPoint;    // Linker Punkt der Schleuder
+    [SerializeField] private Transform RightPoint;   // Rechter Punkt der Schleuder
+    [SerializeField] private Transform PositionAtBall1;  // Position des Balls an der ersten Position (bei maximalem Ziehen)
+    [SerializeField] private Transform PositionAtBall2;  // Position des Balls an der zweiten Position
+    [SerializeField] private Transform PositionAtBall3;  // Position des Balls an der dritten Position
     
+    // Referenz zum BallController, um den Zustand des Balls zu überwachen
     public BallController BallController;
 
-    public bool BallWasReleased;
-    public bool NewDragStarted;
+    // Boolean-Werte zur Überwachung des Ballstatus
+    public bool BallWasReleased;  // Überprüft, ob der Ball freigegeben wurde
+    public bool NewDragStarted;   // Überprüft, ob ein neuer Ziehvorgang gestartet wurde
     
+    // Referenz auf den LineRenderer, der für das Zeichnen der Schleuderlinie verantwortlich ist
     LineRenderer StringLineRenderer;
-    
+
     void Start()
     {
         BallWasReleased = false;
         StringLineRenderer = GetComponent<LineRenderer>();
         StringLineRenderer.positionCount = 5;
         
-        // Sicherstellen, dass der LineRenderer konfiguriert ist
+        // Sicherstellen, dass der LineRenderer die richtige Breite hat, wenn sie nicht gesetzt ist
         if (StringLineRenderer.startWidth == 0)
             StringLineRenderer.startWidth = 0.05f;
         if (StringLineRenderer.endWidth == 0)
@@ -30,23 +34,22 @@ public class SlingShotString : MonoBehaviour
 
     void Update()
     {
-        // Überprüfen, ob alle erforderlichen Referenzen vorhanden sind
         if (LeftPoint == null || RightPoint == null || 
             PositionAtBall1 == null || PositionAtBall2 == null || PositionAtBall3 == null)
         {
-            Debug.LogError("SlingShotString: Eine oder mehrere Transform-Referenzen fehlen!");
+            Debug.LogError("SlingShotString: Eine oder mehrere Transform-Referenzen fehlen!"); 
             return;
         }
 
+        // Wenn der Ball bereits gestartet wurde (wird durch BallController überwacht)
         if (BallController.hasLaunched) {
-            // Wenn der Ball gestartet wurde, zeichne nur eine gerade Linie
+            // Setzt die Positionen des LineRenderers auf nur zwei Punkte (die Schleuderliniendurch den linken und rechten Punkt)
             StringLineRenderer.positionCount = 2;
             StringLineRenderer.SetPositions(new Vector3[2] { LeftPoint.position, RightPoint.position });
         } else {
-            // Ball nicht gestartet, zeichne die Schleuder mit dem Ball
             StringLineRenderer.positionCount = 5;
             
-            // Positionen der Transform-Komponenten verwenden
+            // Setze die Positionen der Schleuderlinie, basierend auf den Transform-Komponenten
             Vector3[] positions = new Vector3[5] {
                 LeftPoint.position,
                 PositionAtBall2.position,
@@ -57,7 +60,7 @@ public class SlingShotString : MonoBehaviour
             
             StringLineRenderer.SetPositions(positions);
             
-            // Debug-Ausgabe
+            // Debug-Ausgabe: Zeichnet die Linien im Editor, um den Verlauf der Schleuder zu visualisieren
             Debug.DrawLine(LeftPoint.position, PositionAtBall2.position, Color.red);
             Debug.DrawLine(PositionAtBall2.position, PositionAtBall1.position, Color.red);
             Debug.DrawLine(PositionAtBall1.position, PositionAtBall3.position, Color.red);
@@ -65,7 +68,7 @@ public class SlingShotString : MonoBehaviour
         }
     }
     
-    // Debug-Visualisierung im Editor
+    // Wird im Editor aufgerufen, um zusätzliche Debug-Visualisierungen zu zeichnen
     void OnDrawGizmos()
     {
         if (PositionAtBall1 && PositionAtBall2 && PositionAtBall3)
