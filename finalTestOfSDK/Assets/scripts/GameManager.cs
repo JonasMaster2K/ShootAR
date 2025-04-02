@@ -26,18 +26,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string playingPanelName = "PlayingPanel";
     [SerializeField] private string gameOverPanelName = "GameOverPanel";
 
-    #region Singleton Pattern
-    public static GameManager Instance { get; private set; }
-    #endregion
 
-    #region Initialization Methods
+    public static GameManager Instance { get; private set; }
+
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            SceneManager.sceneLoaded += OnSceneLoaded;  // Hinzufügen des SceneLoaded-Event
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
@@ -65,14 +63,11 @@ public class GameManager : MonoBehaviour
                 break;
         }
     }
-    #endregion
 
-    #region Game State Management
     public void SetGameState(GameStates newState)
     {
         gameState = newState;
 
-        // Panels anhand der Namen suchen und aktivieren/deaktivieren
         SetPanelActive(setupPanelName, newState == GameStates.SETUP);
         SetPanelActive(playingPanelName, newState == GameStates.PLAYING);
         SetPanelActive(gameOverPanelName, newState == GameStates.GAME_OVER);
@@ -106,12 +101,10 @@ public class GameManager : MonoBehaviour
     {
         // Any specific cleanup when game ends
     }
-    #endregion
 
-    #region State Handling Methods
     private void HandleSetupState() 
     { 
-        if (OVRInput.GetDown(OVRInput.Button.Two) && anchorExists) 
+        if (OVRInput.GetDown(OVRInput.Button.One) && anchorExists) 
             SetGameState(GameStates.PLAYING); 
     }
 
@@ -127,23 +120,26 @@ public class GameManager : MonoBehaviour
 
     private void HandleGameOverState() 
     { 
-        if (OVRInput.GetDown(OVRInput.Button.Two)) 
-            RestartGame(); 
+        if (OVRInput.GetDown(OVRInput.Button.One)) 
+            RestartGame();
+        else if(OVRInput.GetDown(OVRInput.Button.Two))
+        {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
+        }
     }
-    #endregion
 
-    #region Game Management Helpers
     public void RestartGame()
     {
         SetGameState(GameStates.SETUP);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-    #endregion
 
-    #region UI Panel Helpers
     private GameObject FindPanelInUI(string panelName)
     {
-        // Sucht nach dem Canvas mit dem Namen "UI"
         Canvas uiCanvas = GameObject.Find("UI")?.GetComponent<Canvas>();
         if (uiCanvas == null)
         {
@@ -151,7 +147,6 @@ public class GameManager : MonoBehaviour
             return null;
         }
 
-        // Sucht nach dem Panel im "UI"-Canvas
         Transform panelTransform = uiCanvas.transform.Find(panelName);
         if (panelTransform != null)
         {
@@ -170,30 +165,24 @@ public class GameManager : MonoBehaviour
             panel.SetActive(isActive);
         }
     }
-    #endregion
 
-    #region Time Management
     public string GetFormattedTime()
     {
         int minutes = Mathf.FloorToInt(currentTime / 60);
         int seconds = Mathf.FloorToInt(currentTime % 60);
         return string.Format("{0:00}:{1:00}", minutes, seconds);
     }
-    #endregion
 
-    #region Score Management
+
     public static void IncreaseScore() => score++;
     public static int GetScore() => score;
     public static void SetHighScore(int newHighScore) => highScore = newHighScore;
     public static int GetHighScore() => highScore;
-    #endregion
 
-    #region Scene Management
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         SetPanelActive(setupPanelName, gameState == GameStates.SETUP);
         SetPanelActive(playingPanelName, gameState == GameStates.PLAYING);
         SetPanelActive(gameOverPanelName, gameState == GameStates.GAME_OVER);
     }
-    #endregion
 }

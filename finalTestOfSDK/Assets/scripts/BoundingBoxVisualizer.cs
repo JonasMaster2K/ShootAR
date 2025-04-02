@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[ExecuteInEditMode] // Sicherstellen, dass das Skript auch im Editor-Modus funktioniert
-public class BoundingBoxColliderVisualizer : MonoBehaviour
+[ExecuteInEditMode]
+public class BoundingBoxVisualizer : MonoBehaviour
 {
     [Tooltip("Das zu visualisierende Zielobjekt. Falls leer, wird das eigene GameObject verwendet.")]
     public GameObject targetObject;
@@ -94,17 +94,14 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
         
         if (targetCollider != null && targetCollider is BoxCollider boxCollider && limitYHeight)
         {
-            // BoxCollider-spezifische Logik für eigene Bounds-Berechnung
             Vector3 size = boxCollider.size;
             Vector3 center = boxCollider.center;
             
-            // Y-Höhe begrenzen, falls gewünscht
             if (limitYHeight)
             {
                 size.y = Mathf.Min(size.y, maxYHeight);
             }
             
-            // Eigene Bounds mit den Eckpunkten erstellen
             Vector3 extents = size * 0.5f;
             Vector3[] corners = new Vector3[8];
             corners[0] = center + new Vector3(-extents.x, -extents.y, -extents.z);
@@ -116,13 +113,11 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
             corners[6] = center + new Vector3(extents.x, extents.y, extents.z);
             corners[7] = center + new Vector3(-extents.x, extents.y, extents.z);
             
-            // Transformiere alle Eckpunkte in Weltkoordinaten
             for (int i = 0; i < 8; i++)
             {
                 corners[i] = targetObject.transform.TransformPoint(corners[i]);
             }
             
-            // Zeichne die Linien direkt
             if (Application.isPlaying && enableLineRenderer)
             {
                 DrawLine(0, corners[0], corners[1]);
@@ -143,7 +138,6 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
         }
         else
         {
-            // Standard-Verhalten für andere Collider oder Renderer
             if (targetRenderer != null)
             {
                 bounds = targetRenderer.bounds;
@@ -221,7 +215,6 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
             
             if (limitYHeight)
             {
-                // Angepasste Größe für Gizmo
                 Vector3 size = box.size;
                 size.y = Mathf.Min(size.y, maxYHeight);
                 Matrix4x4 oldMatrix = Gizmos.matrix;
@@ -231,7 +224,6 @@ public class BoundingBoxColliderVisualizer : MonoBehaviour
             }
             else
             {
-                // Standard-Verhalten
                 Gizmos.DrawWireCube(box.center + targetObject.transform.position, box.size);
             }
         }

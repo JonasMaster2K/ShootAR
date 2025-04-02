@@ -520,7 +520,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameDuration: 60
   currentTime: 0
-  maxScore: 10
+  maxScore: 100
   setupPanelName: StartScreen
   playingPanelName: Timer
   gameOverPanelName: GameOverScreen
@@ -11120,7 +11120,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Use Index Button to place GameArea
 
-    Press "B" to start game'
+    Press "A" to start game'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -18485,7 +18485,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Press "B" to restart
+  m_text: 'Press "A" to restart
+
+    Press "B" to exit'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class FollowParent : MonoBehaviour
+public class TimerFollowController : MonoBehaviour
 {
     [Header("Hand & Controller References")]
     public GameObject handControllerL;
@@ -16,8 +16,7 @@ public class FollowParent : MonoBehaviour
     
     void Start()
     {
-        // Standardmäßig linken Controller setzen
-        activeController = controllerL ?? controllerR;
+        activeController = controllerR ?? controllerL;
         StyleScoreText();
     }
 
@@ -32,17 +31,14 @@ public class FollowParent : MonoBehaviour
         bool isSimulator = OVRPlugin.GetSystemHeadsetType() == OVRPlugin.SystemHeadset.None;
         bool handTrackingActive = !isSimulator && OVRPlugin.GetHandTrackingEnabled();
         
-        // Wechsel zwischen Controllern bei Tastendruck
         if (OVRInput.GetDown(OVRInput.Button.One))
         {
             SwitchController(handTrackingActive);
         }
 
-        // Position & Rotation setzen
         if (activeController != null)
         {
             transform.position = activeController.transform.position + new Vector3(0, 0.05f, 0);
-            //transform.rotation = activeController.transform.rotation;
             transform.rotation = activeController.transform.rotation;
         }
     }

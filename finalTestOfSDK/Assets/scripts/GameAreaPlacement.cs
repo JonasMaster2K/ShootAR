@@ -1,9 +1,8 @@
 using UnityEngine;
 using Oculus.Interaction;
 using System.Collections.Generic;
-using Meta.XR.MRUtilityKit;  // Für MRUKAnchors
 
-public class ParabolicRaycast : MonoBehaviour
+public class GameAreaPlacement : MonoBehaviour
 {
     public GameObject anchorPrefab;
     public GameObject targetIndicatorPrefab;
@@ -17,8 +16,6 @@ public class ParabolicRaycast : MonoBehaviour
     private LineRenderer lineRenderer;
     private GameObject targetIndicator;
     private GameObject currentAnchor;
-    private List<MRUKAnchor> anchors = new List<MRUKAnchor>();
-    private MRUKAnchor hitMRUKAnchor = null;
 
     private void Start()
     {
@@ -32,26 +29,20 @@ public class ParabolicRaycast : MonoBehaviour
         targetIndicator = Instantiate(targetIndicatorPrefab);
         targetIndicator.transform.localScale = targetScale;
         targetIndicator.SetActive(false);
-
-        // Versuche, den gespeicherten Anker zu laden
-        if (!LoadAnchorPosition(out Vector3 anchorPosition, out Quaternion anchorRotation))
+        
+        if (LoadAnchorPosition(out Vector3 anchorPosition, out Quaternion anchorRotation))
         {
-            // Kein gespeicherter Anker gefunden, erstelle einen neuen
-            Vector3 defaultPosition = new Vector3(0, 0, 0); // Standardposition für den neuen Anker
-            Quaternion defaultRotation = Quaternion.identity; // Standardrotation
-            SpawnAnchor(defaultPosition, Vector3.up); // Erstelle den neuen Anker an der Standardposition
+            SpawnAnchor(anchorPosition, Vector3.up, false);
+            GameManager.anchorExists = true;
         }
         else
         {
-            // Einen gespeicherten Anker laden
-            SpawnAnchor(anchorPosition, Vector3.up); // Position und Rotation aus den gespeicherten Daten verwenden
+            GameManager.anchorExists = false;
         }
     }
 
     private void Update()
     {
-        UpdateAnchors();
-
         if (GameManager.gameState == GameManager.GameStates.SETUP)
         {
             lineRenderer.enabled = true;
@@ -61,14 +52,6 @@ public class ParabolicRaycast : MonoBehaviour
             lineRenderer.enabled = false;
             targetIndicator.SetActive(false);
         }
-    }
-
-    private void UpdateAnchors()
-    {
-        anchors.Clear();
-        MRUKRoom room = FindObjectOfType<MRUKRoom>();
-        if (room != null && room.Anchors != null)
-            anchors = new List<MRUKAnchor>(room.Anchors);
     }
 
     private void HandlePlacement()
@@ -94,8 +77,7 @@ public class ParabolicRaycast : MonoBehaviour
 
         if (hitDetected && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
         {
-            // Platziere das Objekt an der Trefferposition ohne Plattform
-            SpawnAnchor(hitPoint, hitNormal);
+            SpawnAnchor(hitPoint, hitNormal, true);
         }
     }
 
@@ -105,7 +87,6 @@ public class ParabolicRaycast : MonoBehaviour
         bool hitDetected = false;
         hitPoint = Vector3.zero;
         hitNormal = Vector3.up;
-        hitMRUKAnchor = null;
 
         for (int i = 0; i < curveResolution; i++)
         {
@@ -143,7 +124,7 @@ public class ParabolicRaycast : MonoBehaviour
         return start + horizontal + vertical;
     }
 
-    private void SpawnAnchor(Vector3 position, Vector3 normal)
+    private void SpawnAnchor(Vector3 position, Vector3 normal, bool isUserPlaced = true)
     {
         if (currentAnchor != null)
         {
@@ -158,8 +139,12 @@ public class ParabolicRaycast : MonoBehaviour
         controllerForward.Normalize();
 
         currentAnchor.transform.rotation = Quaternion.LookRotation(controllerForward, normal);
-        GameManager.anchorExists = true;
-        SaveAnchorPosition(position, currentAnchor.transform.rotation);
+        
+        if (isUserPlaced)
+        {
+            GameManager.anchorExists = true;
+            SaveAnchorPosition(position, currentAnchor.transform.rotation);
+        }
     }
 
     private void SaveAnchorPosition(Vector3 position, Quaternion rotation)

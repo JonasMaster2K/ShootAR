@@ -3,8 +3,8 @@ using UnityEngine;
 public class SpawnTargetsOverTime : MonoBehaviour
 {
     public GameObject prefab;
-    public BoxCollider spawnArea; // Geändert zu BoxCollider (3D)
-    public float speed = 2f; // Geschwindigkeit der horizontalen Bewegung
+    public BoxCollider spawnArea;
+    public float speed = 2f;
     private GameObject currentPrefab;
     public int targetsHit = 0;
     private bool isMoving = false;
@@ -13,7 +13,6 @@ public class SpawnTargetsOverTime : MonoBehaviour
 
     void Start()
     {
-        // Sicherstellen, dass alles korrekt initialisiert ist
         if (prefab == null)
         {
             Debug.LogError("Prefab nicht zugewiesen!");
@@ -28,7 +27,6 @@ public class SpawnTargetsOverTime : MonoBehaviour
 
     void Update()
     {
-        // Überprüfen des Spielstatus
         if (GameManager.gameState == GameManager.GameStates.PLAYING)
         {
             if (!hasStarted)
@@ -56,59 +54,62 @@ public class SpawnTargetsOverTime : MonoBehaviour
 
     void SpawnPrefab()
     {
-        if (spawnArea == null) return; // Sicherheit, falls spawnArea null ist
+        if (spawnArea == null) return;
 
-        // Bestimmen einer zufälligen Position innerhalb des Bereichs
         Vector3 spawnPosition = new Vector3(
             Random.Range(spawnArea.bounds.min.x, spawnArea.bounds.max.x),
-            spawnArea.bounds.min.y, // Setzt es flach auf den Boden
-            spawnArea.bounds.center.z // Position in der Z-Achse beibehalten
+            spawnArea.bounds.min.y,
+            spawnArea.bounds.center.z
         );
 
-        // Prefab erstellen
         currentPrefab = Instantiate(prefab, spawnPosition, prefab.transform.rotation);
         float parentYRotation = this.transform.parent.eulerAngles.y + 270.0f;
         currentPrefab.transform.rotation = Quaternion.Euler(prefab.transform.rotation.eulerAngles.x, parentYRotation, prefab.transform.rotation.eulerAngles.z);
 
-        // Wenn bestimmte Ziele erreicht wurden, skalieren
         if (targetsHit >= 10)
         {
-            currentPrefab.transform.localScale = prefab.transform.localScale * 0.4f; // Skaliere um 60 % kleiner
+            currentPrefab.transform.localScale = prefab.transform.localScale * 0.4f;
         }
         else if (targetsHit >= 5)
         {
-            currentPrefab.transform.localScale = prefab.transform.localScale * 0.7f; // Skaliere um 30 % kleiner
+            currentPrefab.transform.localScale = prefab.transform.localScale * 0.7f;
         }
     }
 
     void MovePrefab()
     {
-        if (currentPrefab == null) return; // Sicherheit, falls currentPrefab null ist
+        if (currentPrefab == null) return;
 
-        // Berechnen der neuen Position relativ zur Elternachse
-        Vector3 parentForward = this.transform.parent.forward;  // Vorwärtsrichtung des Elternobjekts
-        Vector3 parentRight = this.transform.parent.right;      // Rechtsrichtung des Elternobjekts
-
-        // Berechnen der neuen X-Position entlang der Eltern-Achse (Right-Richtung)
-        float moveDirection = movingLeft ? -speed : speed;
-        Vector3 moveVector = parentRight * moveDirection * Time.deltaTime;
-
-        // Berechnen der neuen Position
-        currentPrefab.transform.position += moveVector;
-
-        // Überprüfen, ob das Prefab die Grenzen des Colliders erreicht hat
-        if (currentPrefab.transform.position.x <= spawnArea.bounds.min.x)
+        TargetScript targetScript = currentPrefab.GetComponent<TargetScript>();
+        
+        if (targetScript != null && targetScript.IsHit)
         {
-            currentPrefab.transform.position = new Vector3(spawnArea.bounds.min.x, currentPrefab.transform.position.y, currentPrefab.transform.position.z);
+            return;
+        }
+
+        Vector3 parentForward = transform.parent.forward;
+        Vector3 parentRight = transform.parent.right;
+
+        float moveDirection = movingLeft ? -speed : speed;
+        Vector3 newPosition = currentPrefab.transform.position + parentRight * moveDirection * Time.deltaTime;
+
+        Vector3 localPos = spawnArea.transform.InverseTransformPoint(newPosition);
+        Vector3 localBoundsMin = spawnArea.bounds.min - spawnArea.transform.position;
+        Vector3 localBoundsMax = spawnArea.bounds.max - spawnArea.transform.position;
+
+        if (localPos.x < localBoundsMin.x)
+        {
+            localPos.x = localBoundsMin.x;
             movingLeft = false;
         }
-        else if (currentPrefab.transform.position.x >= spawnArea.bounds.max.x)
+        else if (localPos.x > localBoundsMax.x)
         {
-            currentPrefab.transform.position = new Vector3(spawnArea.bounds.max.x, currentPrefab.transform.position.y, currentPrefab.transform.position.z);
+            localPos.x = localBoundsMax.x;
             movingLeft = true;
         }
-    }
 
+        currentPrefab.transform.position = spawnArea.transform.TransformPoint(localPos);
+    }
 
     public void IncreaseCounter()
     {
@@ -119,7 +120,6 @@ public class SpawnTargetsOverTime : MonoBehaviour
             GameManager.IncreaseScore();
         }
 
-        // Wenn genügend Ziele getroffen wurden, starte die Bewegung
         if (targetsHit >= 2)
         {
             isMoving = true;

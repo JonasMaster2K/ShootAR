@@ -24,11 +24,6 @@ public class BallController : MonoBehaviour
     [SerializeField] private ForceMode launchForceMode = ForceMode.Impulse;
     [SerializeField] private float launchForce = 10f;
     [SerializeField] private float restoreBallDelay = 2.0f;
-
-    // random references
-   // [SerializeField] private Transform visuals;
-    //[SerializeField] private Transform spawnArea;
-   // [SerializeField] private TextMeshPro statsText;
     
     // public events
     public UnityEvent onBallLaunched = new();
@@ -46,7 +41,6 @@ public class BallController : MonoBehaviour
     private BoxCollider collider;
     private Vector3 launchedBallForceDirection;
     private Grabbable grabbable;
-    private const string BowlingPinTag = "BowlingPin";
     
     void Start()
     {
@@ -55,14 +49,10 @@ public class BallController : MonoBehaviour
         physics = GetComponent<Rigidbody>();
         collider = GetComponent<BoxCollider>();
 
-        //TODO add this to the instructions, moved grabbable to parent and make it
-        //a requireComponent as this will be needed when adding custom hand poses
-       grabbable = GetComponentInChildren<Grabbable>();
+        grabbable = GetComponentInChildren<Grabbable>();
         grabbable.WhenPointerEventRaised += GrabbableOnWhenPointerEventRaised;
 
-        // let's place the player it at a random position
         transform.position = startPosition.position;
-       // initialVisualsRotation = visuals.rotation;
         
         onBallLaunched.AddListener(() =>
         {
@@ -130,12 +120,10 @@ public class BallController : MonoBehaviour
 
         float distance = Mathf.Clamp(Vector3.Distance(pullInitialPosition, grabPosition), 0, maxPullDistance);
         
-        // Apply force in the launch direction
         launchedBallForceDirection = direction * (launchForce * (launchForce * distance));
         
         physics.AddForce(launchedBallForceDirection, launchForceMode);
         
-      
         ResetBall();
         hasLaunched = true;
         Debug.Log("ball has launched" + hasLaunched);
@@ -175,8 +163,6 @@ public class BallController : MonoBehaviour
         transform.position = startPosition.position;
         transform.rotation = Quaternion.identity;
         
-        // clean up physics
-       // visuals.rotation = initialVisualsRotation;
         physics.linearVelocity = Vector3.zero;
         physics.angularVelocity = Vector3.zero;
         physics.isKinematic = true;
@@ -187,10 +173,6 @@ public class BallController : MonoBehaviour
         
         onBallRestored.Invoke();
     }
-
-
-
-
 
     private void OnDestroy()
     {
