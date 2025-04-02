@@ -47,6 +47,11 @@ public class SpawnTargetsOverTime : MonoBehaviour
                 MovePrefab();
             }
         }
+        else if (GameManager.gameState == GameManager.GameStates.GAME_OVER){
+            if(GameManager.GetScore() > GameManager.GetHighScore()){
+                GameManager.SetHighScore(GameManager.GetScore());
+            }
+        }
     }
 
     void SpawnPrefab()
@@ -61,8 +66,9 @@ public class SpawnTargetsOverTime : MonoBehaviour
         );
 
         // Prefab erstellen
-        currentPrefab = Instantiate(prefab, spawnPosition, prefab.transform.rotation * transform.parent.transform.rotation);
-        currentPrefab.transform.parent = this.transform;
+        currentPrefab = Instantiate(prefab, spawnPosition, prefab.transform.rotation);
+        float parentYRotation = this.transform.parent.eulerAngles.y + 270.0f;
+        currentPrefab.transform.rotation = Quaternion.Euler(prefab.transform.rotation.eulerAngles.x, parentYRotation, prefab.transform.rotation.eulerAngles.z);
 
         // Wenn bestimmte Ziele erreicht wurden, skalieren
         if (targetsHit >= 10)
@@ -79,24 +85,30 @@ public class SpawnTargetsOverTime : MonoBehaviour
     {
         if (currentPrefab == null) return; // Sicherheit, falls currentPrefab null ist
 
-        // Berechnen der neuen X-Position
-        float newX = currentPrefab.transform.position.x + (movingLeft ? -speed : speed) * Time.deltaTime;
+        // Berechnen der neuen Position relativ zur Elternachse
+        Vector3 parentForward = this.transform.parent.forward;  // Vorwärtsrichtung des Elternobjekts
+        Vector3 parentRight = this.transform.parent.right;      // Rechtsrichtung des Elternobjekts
 
-        // Prüfen, ob das Prefab die Grenzen des Colliders erreicht hat
-        if (newX <= spawnArea.bounds.min.x)
+        // Berechnen der neuen X-Position entlang der Eltern-Achse (Right-Richtung)
+        float moveDirection = movingLeft ? -speed : speed;
+        Vector3 moveVector = parentRight * moveDirection * Time.deltaTime;
+
+        // Berechnen der neuen Position
+        currentPrefab.transform.position += moveVector;
+
+        // Überprüfen, ob das Prefab die Grenzen des Colliders erreicht hat
+        if (currentPrefab.transform.position.x <= spawnArea.bounds.min.x)
         {
-            newX = spawnArea.bounds.min.x;
+            currentPrefab.transform.position = new Vector3(spawnArea.bounds.min.x, currentPrefab.transform.position.y, currentPrefab.transform.position.z);
             movingLeft = false;
         }
-        else if (newX >= spawnArea.bounds.max.x)
+        else if (currentPrefab.transform.position.x >= spawnArea.bounds.max.x)
         {
-            newX = spawnArea.bounds.max.x;
+            currentPrefab.transform.position = new Vector3(spawnArea.bounds.max.x, currentPrefab.transform.position.y, currentPrefab.transform.position.z);
             movingLeft = true;
         }
-
-        // Aktualisieren der Position des Prefabs
-        currentPrefab.transform.position = new Vector3(newX, currentPrefab.transform.position.y, currentPrefab.transform.position.z);
     }
+
 
     public void IncreaseCounter()
     {

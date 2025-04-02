@@ -63,7 +63,7 @@ public class FollowParent : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = $"Score: {GameManager.GetScore()}";
+            scoreText.text = $"Score: {GameManager.GetScore()} \n Best: {GameManager.GetHighScore()}";
         }
     }
     

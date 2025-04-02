@@ -1,73 +1,86 @@
 using UnityEngine;
 using Oculus.Interaction;
-using System;
-using System.Collections.Generic;  // Füge dies hinzu für die Liste
+using System.Collections.Generic;
+using Meta.XR.MRUtilityKit;  // Für MRUKAnchors
 
 public class ParabolicRaycast : MonoBehaviour
 {
-    public GameObject anchorPrefab;  // Das zu spawnende Objekt
-    public GameObject targetIndicatorPrefab; // Das Zielkreis-Objekt
-    public Vector3 targetScale = Vector3.one;  // Skalierung des Zielobjekts
-    public float maxDistance = 10f;  // Maximale Reichweite des Strahls
-    public float arcHeight = 2f;  // Höhe der Parabelkurve
-    public int curveResolution = 30;  // Anzahl der Punkte der Kurve
-    public LayerMask placementLayer;  // Layer für erlaubte Platzierung
-    public Color rayColor = Color.green;  // Farbe des Strahls
+    public GameObject anchorPrefab;
+    public GameObject targetIndicatorPrefab;
+    public Vector3 targetScale = Vector3.one;
+    public float maxDistance = 10f;
+    public float arcHeight = 2f;
+    public int curveResolution = 30;
+    public LayerMask placementLayer;
+    public Color rayColor = Color.green;
 
     private LineRenderer lineRenderer;
     private GameObject targetIndicator;
-
     private GameObject currentAnchor;
+    private List<MRUKAnchor> anchors = new List<MRUKAnchor>();
+    private MRUKAnchor hitMRUKAnchor = null;
 
     private void Start()
     {
-        // LineRenderer für die Parabel hinzufügen
         lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.startWidth = 0.01f;
         lineRenderer.endWidth = 0.002f;
         lineRenderer.material = new Material(Shader.Find("Unlit/Color"));
         lineRenderer.material.color = rayColor;
         lineRenderer.positionCount = curveResolution;
-        lineRenderer.loop = false;
 
-        // Zielkreis-Objekt initialisieren
         targetIndicator = Instantiate(targetIndicatorPrefab);
         targetIndicator.transform.localScale = targetScale;
-        targetIndicator.SetActive(false); // Unsichtbar zu Beginn
+        targetIndicator.SetActive(false);
 
-        if (LoadAnchorPosition(out Vector3 savedPosition, out Quaternion savedRotation))
+        // Versuche, den gespeicherten Anker zu laden
+        if (!LoadAnchorPosition(out Vector3 anchorPosition, out Quaternion anchorRotation))
         {
-            currentAnchor = Instantiate(anchorPrefab, savedPosition, savedRotation);
-            GameManager.anchorExists = true; // Verhindert erneutes Platzieren
+            // Kein gespeicherter Anker gefunden, erstelle einen neuen
+            Vector3 defaultPosition = new Vector3(0, 0, 0); // Standardposition für den neuen Anker
+            Quaternion defaultRotation = Quaternion.identity; // Standardrotation
+            SpawnAnchor(defaultPosition, Vector3.up); // Erstelle den neuen Anker an der Standardposition
+        }
+        else
+        {
+            // Einen gespeicherten Anker laden
+            SpawnAnchor(anchorPosition, Vector3.up); // Position und Rotation aus den gespeicherten Daten verwenden
         }
     }
 
     private void Update()
     {
-        if(GameManager.gameState == GameManager.GameStates.SETUP){
-            if(!GameManager.anchorExists){
-                HandlePlacement();
-            } else if (OVRInput.GetDown(OVRInput.Button.One)) {
-                ResetAnchor();
-            } else {
-                targetIndicator.SetActive(false);
-                lineRenderer.positionCount = 0;
-                lineRenderer.SetPositions(new Vector3[0]);
-            }
+        UpdateAnchors();
+
+        if (GameManager.gameState == GameManager.GameStates.SETUP)
+        {
+            lineRenderer.enabled = true;
+            targetIndicator.SetActive(true);
+            HandlePlacement();
+        } else if(GameManager.gameState != GameManager.GameStates.SETUP) {
+            lineRenderer.enabled = false;
+            targetIndicator.SetActive(false);
         }
     }
 
-    private void HandlePlacement(){
-        // Position und Richtung des Controllers holen
+    private void UpdateAnchors()
+    {
+        anchors.Clear();
+        MRUKRoom room = FindObjectOfType<MRUKRoom>();
+        if (room != null && room.Anchors != null)
+            anchors = new List<MRUKAnchor>(room.Anchors);
+    }
+
+    private void HandlePlacement()
+    {
         Vector3 controllerPos = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
         Quaternion controllerRot = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
-        Vector3 startDirection = controllerRot * Vector3.forward;  // Richtung des Strahls
+        Vector3 startDirection = controllerRot * Vector3.forward;
 
         Vector3 hitPoint = Vector3.zero;
-        Vector3 hitNormal = Vector3.up;  // Standardwert
+        Vector3 hitNormal = Vector3.up;
         bool hitDetected = CalculateParabolicCurve(controllerPos, startDirection, out hitPoint, out hitNormal);
 
-        // Zeige das Zielobjekt an der Treffpunkt-Position an
         if (hitDetected)
         {
             targetIndicator.SetActive(true);
@@ -79,55 +92,52 @@ public class ParabolicRaycast : MonoBehaviour
             targetIndicator.SetActive(false);
         }
 
-        // Platzieren des Objekts, wenn der Trigger gedrückt wird
         if (hitDetected && OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
         {
+            // Platziere das Objekt an der Trefferposition ohne Plattform
             SpawnAnchor(hitPoint, hitNormal);
         }
     }
 
     private bool CalculateParabolicCurve(Vector3 startPos, Vector3 startDir, out Vector3 hitPoint, out Vector3 hitNormal)
     {
-        List<Vector3> points = new List<Vector3>();  // Verwende eine Liste statt eines Arrays
+        List<Vector3> points = new List<Vector3>();
         bool hitDetected = false;
         hitPoint = Vector3.zero;
-        hitNormal = Vector3.up; // Standardwert
+        hitNormal = Vector3.up;
+        hitMRUKAnchor = null;
 
-        // Berechne die Punkte der Parabel
         for (int i = 0; i < curveResolution; i++)
         {
-            float t = (float)i / (curveResolution - 1);  // Normierte Zeit (0 bis 1)
+            float t = (float)i / (curveResolution - 1);
             Vector3 point = ParabolicPoint(startPos, startDir, t);
-            points.Add(point);  // Füge den Punkt zur Liste hinzu
+            points.Add(point);
 
-            // Prüfe, ob ein Treffer vorliegt
-            if (i > 0 && Physics.Raycast(points[i - 1], points[i] - points[i - 1], out RaycastHit hit, Vector3.Distance(points[i - 1], points[i]), placementLayer))
+            if (i > 0)
             {
-                hitPoint = hit.point;
-                hitNormal = hit.normal; // Speichert die Oberflächenausrichtung
-                hitDetected = true;
-                break;  // Stoppe, sobald ein Treffer erkannt wurde
+                Vector3 segmentStart = points[i - 1];
+                Vector3 segmentEnd = points[i];
+                Vector3 direction = segmentEnd - segmentStart;
+                float distance = Vector3.Distance(segmentStart, segmentEnd);
+
+                if (Physics.Raycast(segmentStart, direction, out RaycastHit hit, distance, placementLayer))
+                {
+                    hitPoint = hit.point;
+                    hitNormal = hit.normal;
+                    hitDetected = true;
+                    break;
+                }
             }
         }
 
-        // Wenn ein Treffer erkannt wurde, aktualisiere den LineRenderer
-        if (hitDetected)
-        {
-            // Die Liste in ein Array umwandeln (begrenzt auf die Anzahl der tatsächlichen Punkte)
-            lineRenderer.positionCount = Mathf.Min(points.Count, curveResolution);  // Maximal so viele Punkte wie die Auflösung
-            lineRenderer.SetPositions(points.ToArray());  // Konvertiere die Liste in ein Array für den LineRenderer
-        }
-        else
-        {
-            lineRenderer.positionCount = 0;  // Keine Linie, wenn kein Treffer
-        }
+        lineRenderer.positionCount = points.Count;
+        lineRenderer.SetPositions(points.ToArray());
 
         return hitDetected;
     }
 
     private Vector3 ParabolicPoint(Vector3 start, Vector3 direction, float t)
     {
-        // Berechnet die Parabelbahn: Eine Mischung aus der Richtung + Schwerkraft-Effekt
         Vector3 horizontal = direction * maxDistance * t;
         Vector3 vertical = Vector3.down * (arcHeight * (t * t));
         return start + horizontal + vertical;
@@ -135,7 +145,10 @@ public class ParabolicRaycast : MonoBehaviour
 
     private void SpawnAnchor(Vector3 position, Vector3 normal)
     {
-        if (GameManager.anchorExists) return; // Falls schon vorhanden, nichts tun
+        if (currentAnchor != null)
+        {
+            Destroy(currentAnchor);
+        }
 
         currentAnchor = Instantiate(anchorPrefab, position, Quaternion.identity);
 
@@ -145,19 +158,8 @@ public class ParabolicRaycast : MonoBehaviour
         controllerForward.Normalize();
 
         currentAnchor.transform.rotation = Quaternion.LookRotation(controllerForward, normal);
-
+        GameManager.anchorExists = true;
         SaveAnchorPosition(position, currentAnchor.transform.rotation);
-        GameManager.anchorExists = true; // Sperrt weiteres Platzieren
-    }
-
-    private void ResetAnchor()
-    {
-        if (currentAnchor != null)
-        {
-            Destroy(currentAnchor);
-        }
-        DeletePlayerPrefs();
-        GameManager.anchorExists = false;
     }
 
     private void SaveAnchorPosition(Vector3 position, Quaternion rotation)
@@ -189,6 +191,7 @@ public class ParabolicRaycast : MonoBehaviour
             );
             return true;
         }
+
         position = Vector3.zero;
         rotation = Quaternion.identity;
         return false;

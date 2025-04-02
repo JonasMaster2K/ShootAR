@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int maxScore = 10;
 
     private static int score;
+    private static int highScore = 0;
 
     // Panel-Namen als Strings
     [SerializeField] private string setupPanelName = "SetupPanel";
@@ -110,7 +111,7 @@ public class GameManager : MonoBehaviour
     #region State Handling Methods
     private void HandleSetupState() 
     { 
-        if (OVRInput.GetDown(OVRInput.Button.Two)) 
+        if (OVRInput.GetDown(OVRInput.Button.Two) && anchorExists) 
             SetGameState(GameStates.PLAYING); 
     }
 
@@ -183,6 +184,8 @@ public class GameManager : MonoBehaviour
     #region Score Management
     public static void IncreaseScore() => score++;
     public static int GetScore() => score;
+    public static void SetHighScore(int newHighScore) => highScore = newHighScore;
+    public static int GetHighScore() => highScore;
     #endregion
 
     #region Scene Management
